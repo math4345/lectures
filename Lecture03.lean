@@ -16,12 +16,29 @@ def fib : (n : ℕ) → ℕ := fun
   | (Nat.succ (Nat.succ n)) =>
     (fib n) + (fib (Nat.succ n)) 
 
+#check Nat.add_zero
+#check Nat.zero_add
+
+example (n : ℕ) : 0 + n = n + 0 := by
+  rw [Nat.add_zero]
+  rw [Nat.zero_add]
+
+#eval fib 6 == 8
+#eval fib 5 == 5
+#eval fib 4 == 3
+#eval fib 3 == 2
+#eval fib 2 == 1
+#eval fib 1 == 1
+#eval fib 0 == 0
+
 inductive mynat where
   | zero : mynat
   | succ (n : mynat) : mynat
 deriving Repr
 
 namespace mynat
+
+#eval succ (succ (succ zero))
 
 def add : mynat → mynat → mynat := fun
   | m, zero        => m
