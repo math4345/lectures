@@ -9,4 +9,12 @@ import Mathlib.Tactic
 --                                              
 -- 
 
-#check 2 + 2
+-- Provide an overview of the learning outcomes 
+
+-- Review the syllabus
+
+-- Discuss the first assignment:
+--   * Learn to use GitHub classroom
+--   * Try the Natural Number Game
+
+-- Demonstrate the first "world" in the Natural Number Game
