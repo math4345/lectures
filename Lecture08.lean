@@ -12,41 +12,64 @@ import Mathlib.Tactic
 -- This week's theme is "logic" and "propositions"
 
 -- goal: the "by_contra" tactic 
+-- another tactic: constructor
 
 example : ∀ (ε : ℝ), (0 < ε) → (0 < 1 / ε) := by
   intro ε
   intro h
-  apply one_div_pos.mpr
-  exact h
+  exact one_div_pos.mpr h
+
+example (ε : ℝ) (h : 0 < ε) : (0 < 1 / ε) := one_div_pos.mpr h
 
 section
 
 variable (P Q : Prop) 
 
-def np_and_nq_implies_not_porq : (¬ P) ∧ (¬ Q) → ¬ (P ∨ Q) := by
-  intro h
-  rcases h with ⟨ hp, hq ⟩ 
-  intro h
-  rcases h with p|q
-  apply hp
+example : P → (¬ ¬ P) := by
+  intro p
+  dsimp [Not]
+  intro np
+  apply np
   exact p
-  apply hq
-  exact q
+
+example : P → (¬ ¬ P) := fun p => fun np => np p 
+
+example : P → (¬ ¬ P) := by
+  intro p
+  by_contra h
+  exact h p
+
+def nnp_implies_p : (¬ ¬ P) → P := by
+  intro h
+  by_contra np
+  dsimp [Not] at *
+  apply h
+  exact np
+  
+def np_and_nq_implies_not_porq : (¬ P) ∧ (¬ Q) → ¬ (P ∨ Q) := by
+  rintro ⟨ np, nq ⟩ ( p | q ) 
+  exact np p
+  dsimp [Not] at nq
+  apply nq -- if the goal is B, apply takes an implication A -> B
+  exact q  -- and makes the new goal A
+
+example : P → (Q → (P ∧ Q) ) := by
+  intro p
+  apply And.intro
+  exact p
+
+example : P → (Q → (P ∧ Q) ) := And.intro
 
 def not_porq_implies_np_and_nq : ¬(P ∨ Q) → (¬ P) ∧ (¬ Q) := by
-  intro h
+  intro nporq
   apply And.intro
-  
-  by_contra hp
-  apply h
-  left
-  exact hp
 
-  by_contra hq
-  apply h
-  right
-  exact hq
+  dsimp [Not] at *
+
   
+
+  rintro ( p | q ) 
+
 def not_porq_iff_np_and_nq : ¬(P ∨ Q) ↔ (¬ P) ∧ (¬ Q) := by
   constructor
   apply not_porq_implies_np_and_nq
