@@ -9,25 +9,53 @@ import Mathlib.Tactic
 --                                                 
 -- 
 
+-- tactic: dsimp
+-- another new tactic: change
+
+lemma two_not_dvd_one : ¬ ((2 : ℤ) ∣ 1) := by
+  intro h
+  have h' : (2 : ℤ) ≤ 1
+  apply Int.le_of_dvd
+  norm_num
+  exact h
+  norm_num at h'
+
+example : ¬ ((2 : ℤ) ∣ 3) := by
+  rintro ⟨ d, h ⟩
+  have k : (2 : ℤ) ∣ 1
+  use d - 1
+  linarith
+  exact two_not_dvd_one k
+
+example : ¬ ((2 : ℤ) ∣ 9) := by
+  rintro ⟨ d, h ⟩
+  have k : (2 : ℤ) ∣ 1
+  use d - 4
+  linarith
+  exact two_not_dvd_one k
+
+example : ¬ (Even 9) := by sorry
+
 example : (3 : ℤ) ∣ 12 := by
   dsimp [(· ∣ ·)]
   use 4
   norm_num
-
--- NIBZO means "no integer between zero and one"
-lemma nibzo : ¬ ∃ (a : ℤ), a > 0 ∧ a < 1 := by
+  
+-- NNBZO means "no natural number between zero and one"
+lemma nnbzo : ¬ ∃ (a : ℕ), a > 0 ∧ a < 1 := by
   rintro ⟨ n, h1, h2 ⟩
-  have h3 : n ≥ 1 := by linarith
-  linarith
+  exact Nat.le_lt_antisymm h1 h2
 
 variable (a b c : ℤ)
 
 example (hab : a ∣ b) (hbc : b ∣ c) : a ∣ c := by
-  rcases hab with ⟨ n_ab, k_ab ⟩
-  rcases hbc with ⟨ n_bc, k_bc ⟩
-  use n_ab * n_bc
-  rw [k_bc, k_ab]
-  ring
+  rcases hab with ⟨ kab, hab ⟩
+  rcases hbc with ⟨ kbc, hbc ⟩
+  dsimp [(· ∣ ·)]
+  rw [hbc]
+  rw [hab]
+  use kab * kbc
+  rw [mul_assoc]
 
 example (hab : a ∣ b) (hbc : b ∣ c) : a ∣ c := by
   exact dvd_trans hab hbc
@@ -36,12 +64,18 @@ example : a ∣ 0 := by
   use 0
   norm_num
 
+example : a ∣ 0 := by
+  exact Int.dvd_zero a
+
 example (h : a * b ∣ c) : a ∣ c := by
-  dsimp [(· ∣ ·)]
+  change ∃ n, c = a * n 
   rcases h with ⟨ k, h ⟩
   use b * k
-  ring_nf
+  rw [← mul_assoc]
   exact h
+
+example (h : a * b ∣ c) : a ∣ c := by
+  exact dvd_of_mul_right_dvd h
 
 variable (n : ℕ)
 
