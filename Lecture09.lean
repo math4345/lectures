@@ -9,66 +9,72 @@ import Mathlib.Tactic
 --                                                  
 -- 
 
--- new tactic: specialize
-
-section
-
 variable {α : Type} (P : α → Prop)
+
+variable (Q R : Prop)
+
+example : Q → ¬ Q → False := by
+  intros q nq
+  exact nq q
+
+example : Q → R → Q ∧ R := by
+  intro hq
+  intro hr
+  -- exact ⟨ hq, hr ⟩
+  apply And.intro
+  exact hq
+  exact hr
+
+lemma l1 : (∀ x, ¬ P x) → (¬ ∃ x, P x) := by
+  rintro h ⟨ y, py ⟩
+  exact h y py
+
+lemma l2 : (¬ ∃ x, P x) → ∀ x, ¬ P x := by
+  intro h
+  dsimp [Not] at *
+  intro x
+  intro px
+  apply h
+  have h' : ∃ x, P x
+  exact ⟨ x,  px ⟩
+  exact h'
+
+example : (∀ x, ¬ P x) ↔ (¬ ∃ x, P x) := by
+  exact Iff.symm not_exists
+
+example : (∀ x, ¬ P x) ↔ (¬ ∃ x, P x) := by
+  constructor
+  apply l1
+  apply l2
+
+example : (¬ ∀ x, P x) → ∃ x, ¬ P x := by
+  contrapose! -- P => Q iff not Q => not P
+  intro h
+  exact h
 
 example : (¬ ∀ x, P x) → ∃ x, ¬ P x := by
   intro h
   by_contra h'
-  apply h
-  intro x
-  by_contra h''
-  apply h'
-  use x 
+  push_neg at h'
+  exact h h'
 
--- Can you invent similar examples?
+example : (¬ ∀ x, P x) → ∃ x, ¬ P x := by
+  exact not_forall.mp
 
-end section
+-- If it isn't the case that, for all x, P(x),
+-- then there exists an x so that P(x) is false.
+example : (¬ ∀ x, P x) → ∃ x, ¬ P x := by
+  intro h -- Suppose the hypothesis: ¬ ∀ x, P x
+  by_contra h' -- Assume, to the contrary,
+               -- that there does NOT exist
+               -- an x so that P(x) is false.
+  apply h -- I will get a contradiction by
+          -- proving ∀ x, P x
+  intro x -- To prove ∀ x, P x, I pick an arbitrary
+          -- x and prove P(x).
+  by_contra np -- Suppose P(x) were false...
+  apply h' -- but I assumed earlier there did NOT
+           -- exist an x so that P(x) is false.
+  exact ⟨ x, np ⟩ -- the arbitrary x provides
+                 -- a contradiction.
 
-section
-
-def bounded (f : ℝ → ℝ) := ∃ b, ∀ x, f x ≤ b
-
-example {f : ℝ → ℝ } : bounded f → bounded ( fun x => 2 * f x ) := by
-  dsimp [bounded]
-  intro h
-  rcases h with ⟨ b, h ⟩ 
-  use 2 * b
-  intro x
-  specialize h x
-  linarith
-
-end section
-
--- the squaring function is continuous at zero
-example : ∀ (ε : ℝ), (0 < ε) → ∃ (δ : ℝ), (0 < δ) ∧ ∀ (x : ℝ), abs x < δ → abs (x * x) < ε := by
-  intro ε 
-  intro hε
-  use min ε 1
-
-  apply And.intro
-
-  apply lt_min
-  exact hε
-  norm_num
-
-  intro x
-  intro hx
-  
-  have h' : |x| < ε ∧ |x| < 1 := Iff.mp lt_min_iff hx
-  rcases h' with ⟨ h, h1 ⟩ 
-
-  have h'' : |x| * |x| < ε * 1
-  apply mul_lt_mul'
-  linarith
-  linarith
-  apply abs_nonneg
-  exact hε
-
-  rw [abs_mul]  
-  ring_nf at h''
-  ring_nf
-  exact h''
