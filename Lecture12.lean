@@ -13,14 +13,19 @@ section
 
 variable (P Q R : Prop)
 
+example : P → (P ∨ Q) := fun h => Or.inl h
+
+example : Q → (P ∨ Q) := fun h => Or.inr h
+
 example : P → (P ∨ Q) := by
   intro h
   left
   exact h
 
-example : P → (P ∨ Q) := fun h => Or.inl h
-
-example : Q → (P ∨ Q) := fun h => Or.inr h
+example : Q → (P ∨ Q) := by
+  intro h
+  right
+  exact h
 
 -- this is the "left injection" from P to P ∨ Q
 example : P → (P ∨ Q) := Or.inl
@@ -30,17 +35,77 @@ example : Q → (P ∨ Q) := Or.inr
 
 example : (P ∨ Q) → (P ∨ Q) := fun h => h
 
+-- here is a tactics-mode proof
 example : (P ∨ Q) → (Q ∨ P) := by
   intro h
   rcases h with hp|hq
   exact Or.inr hp
   exact Or.inl hq
 
+example : (P ∨ P) → P := by
+  intro h
+  rcases h with h1|h2
+  exact h1
+  exact h2
+
 example : (P ∨ P) → P := fun
   | Or.inl h => h
   | Or.inr h => h
 
-example : (P ∨ Q) → (Q ∨ P) := sorry
+-- give a term-mode proof of this example from above
+example : (P ∨ Q) → (Q ∨ P) := fun
+  | Or.inl hp => Or.inr hp
+  | Or.inr hq => Or.inl hq
+
+-- give a term-mode proof of this example from above
+example : (P ∨ Q) → (Q ∨ P) := fun
+  | Or.inl hp => Or.inr hp
+  | Or.inr hq => Or.inl hq
+
+-- mix them!
+lemma orcom : (P ∨ Q) → (Q ∨ P) := fun
+  | Or.inl hp => Or.inr (by assumption)
+  | Or.inr hq => by left
+                    assumption 
+
+example : (P ∨ Q) → (Q ∨ P) := Or.comm.mp
+
+end section
+
+section
+
+example : ¬ (P ∧ ¬ P) := by
+  intro h
+  rcases h with ⟨ hp, np ⟩
+  exact np hp
+
+example : ¬ (P ∧ ¬ P) :=
+  fun ⟨ hp, np ⟩ => np hp
+
+example : ¬ (P ∧ ¬ P)
+  | ⟨ hp, np ⟩ => np hp
+
+example : ¬ (P ∧ ¬ P) := and_not_self
+
+example : P → ¬ (P → ¬ P) := by
+  intro hp
+  intro h
+  apply h
+  exact hp
+  exact hp
+
+example : (¬ P) → (P → ¬ P) := by
+  intro hp
+  intro _
+  exact hp
+
+example : (¬ P) → (¬ ¬ (P → ¬ P)) := by
+  intro hp
+  have h : (P → ¬ P)
+  intro _
+  exact hp
+  intro k
+  exact k h
 
 end section
 
@@ -79,11 +144,17 @@ open list
 
 #check cons 5 (cons 3 nil)
 
-def len : list → ℕ := fun
+def len : list → ℕ 
   | nil => 0
   | cons _ xs => 1 + len xs
 
-def append : list → list → list := fun  
+#eval len nil
+
+#eval len (cons 17 nil)
+
+#eval len (cons 5 (cons 3 nil))
+
+#eval len (cons 5 (cons 5 (cons 3 nil)))
 
 end section
 
