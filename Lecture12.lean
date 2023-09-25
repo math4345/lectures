@@ -109,27 +109,6 @@ example : (¬ P) → (¬ ¬ (P → ¬ P)) := by
 
 end section
 
--- new tactic: calc
-
-section
-
-example (x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 16) : x = 4 := by
-  have h : (x - y)^2 = 0 :=
-    calc (x - y)^2 = (x + y) ^ 2 - 4 * (x * y) := by ring
-                 _ = 8 ^ 2 - 4 * 16 := by rw [h1, h2]
-                 _ = 0 := by norm_num
-  have h' : x - y = 0 := Iff.mp sq_eq_zero_iff h
-  linarith
-
-example (x y : ℝ) : x * y ≤ ( (x + y) / 2 ) ^ 2 := by
-  have h : ((x - y)/2)^2 ≥ 0 := sq_nonneg ((x - y)/2)
-  exact
-    calc x * y 
-      ≤ x * y + ((x - y)/2)^2 := le_add_of_nonneg_right h
-      _ = ((x + y)/2) ^ 2 := by ring
-
-end section
-
 -- Let's try a bit more "programming" in Lean
 
 section

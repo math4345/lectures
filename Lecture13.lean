@@ -11,6 +11,21 @@ import Mathlib.Tactic
 
 section
 
+variable (P Q R : Prop)
+
+variable (hp : P) (hq : Q)
+
+#check (Or.inl hp)
+#check (Or.inr hq)
+
+example : (P ∨ Q) → (Q ∨ P) := fun
+  | Or.inl hp => Or.inr hp
+  | Or.inr hq => Or.inl hq
+
+end section
+
+section
+
 inductive list where
   | nil : list
   | cons (x : ℕ) (xs : list) : list
@@ -20,7 +35,7 @@ open list
 
 #check nil
 
-#check cons 5 (cons 3 nil)
+#check cons 5 (cons 3 nil) -- [5,3]
 
 def len : list → ℕ 
   | nil => 0
@@ -114,6 +129,37 @@ section
 example (x y : ℝ) (h1 : x + y = 8) (h2 : x - y = 2) : x = 5 := by
   linarith
 
+example (x y : ℝ) (h1 : x + y = 8) (h2 : x - y = 2) : x = 5 := by
+  have h :=
+    calc (x+y) + (x-y) = 8 + (x-y) := by rw [h1]
+    _ = 8 + 2 := by rw [h2]
+    _ = 10 := by norm_num
+  have h' : (x+y) + (x-y) = 2 * x := by ring
+  have h'' : 2 * x = 10 := by rw [← h,h']
+  -- x = (2*x) / 2 by properties of rings-
+  --   = 10 / 2 because 2x = 10
+  --   = 5 by arithmetic
+  calc x = (2 * x) / 2 := by ring
+     _ = 10 / 2 := by rw [h'']
+     _ = 5 := by norm_num
+
+example (x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 16) : x = 4 := by
+  polyrith
+
+example (x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 16) : x = 4 := by
+  -- y = 8 - x
+  have h : y = 8 - x := by linarith
+  -- x * y = x * (8 - x) = 16
+  have h' : x * y = x * (8 - x) := by rw [h]
+  have h'' := 
+    calc (x-4)^2 = x * x - 8 * x + 16 := by ring
+     _ = 16 - x * (8 - x) := by ring
+     _ = 16 - x * y := by rw [← h']
+     _ = 16 - 16 := by rw [h2]
+     _ = 0 := by norm_num
+  have k : x - 4 = 0 := sq_eq_zero_iff.mp h''
+  linarith
+
 example (x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 16) : x = 4 := by
   have h : (x - y)^2 = 0 :=
     calc (x - y)^2 = (x + y) ^ 2 - 4 * (x * y) := by ring
@@ -122,8 +168,7 @@ example (x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 16) : x = 4 := by
   have h' : x - y = 0 := sq_eq_zero_iff.mp h
   linarith
 
-example (
-  x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 15) : x = 3 ∨ x = 5 := by
+example (x y : ℝ) (h1 : x + y = 8) (h2 : x * y = 15) : x = 3 ∨ x = 5 := by
   have h : (x - 3) * (y - 3) = 0 :=
     calc (x - 3) * (y - 3) = x * y - 3 * (x + y) + 9 := by ring
          _ = 15 - 3 * 8 + 9 := by rw [h1,h2]
