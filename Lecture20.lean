@@ -1,29 +1,17 @@
 import Mathlib.Tactic
-import Mathlib.Data.Real.Irrational
-import Mathlib.Data.Real.Sqrt
 
--- Math 4345: Lecture 19
---  _              _                    _  ___  
--- | |    ___  ___| |_ _   _ _ __ ___  / |/ _ \ 
--- | |   / _ \/ __| __| | | | '__/ _ \ | | (_) |
--- | |__|  __/ (__| |_| |_| | | |  __/ | |\__, |
--- |_____\___|\___|\__|\__,_|_|  \___| |_|  /_/ 
---                                              
+-- Math 4345: Lecture 20
+--  _              _                    ____   ___  
+-- | |    ___  ___| |_ _   _ _ __ ___  |___ \ / _ \ 
+-- | |   / _ \/ __| __| | | | '__/ _ \   __) | | | |
+-- | |__|  __/ (__| |_| |_| | | |  __/  / __/| |_| |
+-- |_____\___|\___|\__|\__,_|_|  \___| |_____|\___/ 
+--                                                  
 -- 
 
-example : (fun (x : ℕ) => x + 1) = (fun (x : ℕ) => 1 + x) := by
-  ext x
-  ring
-
--- more inequalities, more sets
-example : ¬ (∃ x : ℤ, x ∈ ∅) := by
-  sorry
-
-example : ¬ (∃ x, x ∈ (∅ : Set ℤ)) := by
-  dsimp [Not]
-  intro h
-  rcases h with ⟨ _, hx ⟩
-  exact hx
+-- This week is Ohio State's Fall Break,
+-- which means no homework, or
+-- a chance to catch up.
 
 example : ¬ (∃ x, x ∈ (∅ : Set ℤ)) := by simp
 
