@@ -20,120 +20,92 @@ variable (A B C : Set α)
 
 example : (A ⊆ B) = ∀ (x : α), x ∈ A → x ∈ B := Set.subset_def
 
+#check Set.mem_setOf
+
 example : { x : ℤ | ∃ y, Even y ∧ (y * y = x) } ⊆ { x : ℤ | Even x } := by
   rw [Set.subset_def]
-  simp [Set.mem_setOf] -- why simp?
-  sorry
+  simp [Set.mem_setOf] -- why simp?  works under binder ∀
+  intro a
+  simp [Even]
+  intro x
+  intro h
+  use x*a
+  rw [h]
+  ring
 
-example : (A ∩ B) ∪ A = A := by
-  sorry
+lemma inter_union' : (A ∩ B) ∪ A = A := by
+  ext x
+  constructor
+  
+  intro h
+  rw [Set.inter_def] at h
+  rw [Set.union_def] at h
+  rw [Set.mem_setOf] at h
+  
+  rcases h with hp|hq
+  
+  rw [Set.mem_setOf] at hp
+  exact hp.left
 
-example : (A ∪ B) ∩ A = A := by
-  sorry
+  exact hq
+
+  intro h
+  
+  rw [Set.union_def]
+  rw [Set.mem_setOf]
+
+  right -- or I could use `exact Or.inr h`
+  exact h
+
+lemma inter_union : (A ∩ B) ∪ A = A := by
+  simp
+
+#print inter_union'
+
+#print inter_union
+
+example : (A ∪ B) ∩ A = A := Set.union_inter_cancel_left
 
 def f (x : ℕ) : ℕ := x * x
 
-#eval f 3
+def g : ℕ → ℕ := fun (x : ℕ) => x * x
 
-#check (f '' (Set.univ : Set ℕ))
+#eval f 12
 
-example : (f '' (Set.univ : Set ℕ)) = { x : ℕ | ∃ y, y * y = x } := by
+#check (f '' (Set.univ : Set ℕ)) -- this is "f(ℕ)", the image of f
+
+#check (f '' { x : ℕ | x < 10}) -- this is "f({0,...,9})"
+
+lemma squares : (f '' (Set.univ : Set ℕ)) = { x : ℕ | ∃ y, y * y = x } := by
   unfold f
-  ext x
+  ext z
   rw [Set.mem_setOf]
   simp -- wow!
 
+example : (f '' (∅ : Set ℕ)) = ∅ := by simp
+
+example : (f '' { 2 }) = { 4 } := by simp
+
+def less_than (n : ℕ) : Set ℕ := { x : ℕ | x < n }
+
+@[simp]
+def less_than_def (n : ℕ) : less_than n = { x : ℕ | x < n } := by rfl
+
+example : less_than 0 = ∅ := by 
+  unfold less_than
+  simp
+
+example : less_than 0 = ∅ := by simp
+
 -- Indexed families
+example : ⋃ (n : ℕ), less_than n = (Set.univ : Set ℕ) := by
+  sorry
+
 example : ⋃ (n : ℕ), { x : ℕ | x < n } = (Set.univ : Set ℕ) := by
-  ext n
+  ext m
   rw [Set.mem_iUnion]
   simp [Set.mem_setOf]
-  use n + 1
-  exact Nat.lt.base n  
+  use m + 1
+  exact Nat.lt.base m
 
-example : ⋂ (r > 0), (Set.Ioo (-r) r : Set ℝ) = Set.singleton 0 := by
-  ext x
-  simp
-  constructor
-  
-  intro h
-  apply Set.mem_singleton_iff.mpr
-
-  by_cases k : x > 0 
-  specialize h (x / 2) (by linarith)
-  exfalso
-  linarith
-
-  by_cases k' : x < 0
-  specialize h (-x / 2) (by linarith)
-  exfalso
-  linarith
-  
-  linarith
-
-  intro h
-  have h := Set.mem_singleton_iff.mp h
-  intro i
-  intro hi
-  constructor
-
-  linarith
-  linarith  
-
--- the square root of two is not rational
-lemma sqrt2 : { x : ℚ | x ≥ 0 ∧ x * x = 2 } = ∅ := by
-  ext x
-  rw [Set.mem_setOf]
-  simp
-  intro h
-  intro h5
-  have hpos : 0 ≤ (x : ℝ)
-  norm_cast
-  have h' : (0 : ℝ) ≤ 2 := by linarith
-  have h1 := (Real.sqrt_eq_iff_sq_eq h' hpos).mpr
-  have h2 : (x : ℝ)^2 = 2
-  ring_nf at h5
-  norm_cast
-  rw [h5]
-  norm_num    
-
-  have h3 : Real.sqrt 2 = (x : ℝ) := h1 h2
-  have h4 := irrational_sqrt_two   
-  unfold Irrational at h4
-  apply h4
-  simp [Set.mem_setOf]
-  use x
-  simp [h3]
-  
-lemma sqrt2' : { x : ℚ | x * x = 2 } = ∅ := by
-  ext x
-  rw [Set.mem_setOf]
-  by_cases x ≥ 0
-
-  have s := sqrt2
-  have s' := Set.eq_empty_iff_forall_not_mem.mp s
-  specialize s' x
-  rw [Set.mem_setOf] at s'
-  push_neg at s'
-  specialize s' h
-  constructor
-
-  intro h
-  exact s' h
-
-  tauto
-
-  have s := sqrt2
-  have s' := Set.eq_empty_iff_forall_not_mem.mp s
-  specialize s' (-x)
-  rw [Set.mem_setOf] at s'
-  push_neg at s'
-  specialize s' (by linarith)
-  constructor
-  ring_nf at s'
-  intro h
-  ring_nf at h
-  exact s' h
-
-  tauto
-    
+example : Set.singleton 0 = { 0 } := by rfl
