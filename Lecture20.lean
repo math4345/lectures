@@ -1,13 +1,13 @@
 import Mathlib.Tactic
 
 -- Math 4345: Lecture 20
---  _              _                    ____   ___  
--- | |    ___  ___| |_ _   _ _ __ ___  |___ \ / _ \ 
+--  _              _                    ____   ___
+-- | |    ___  ___| |_ _   _ _ __ ___  |___ \ / _ \
 -- | |   / _ \/ __| __| | | | '__/ _ \   __) | | | |
 -- | |__|  __/ (__| |_| |_| | | |  __/  / __/| |_| |
--- |_____\___|\___|\__|\__,_|_|  \___| |_____|\___/ 
---                                                  
--- 
+-- |_____\___|\___|\__|\__,_|_|  \___| |_____|\___/
+--
+--
 
 -- This week is Ohio State's Fall Break,
 -- which means no homework, or
@@ -36,21 +36,21 @@ example : { x : ℤ | ∃ y, Even y ∧ (y * y = x) } ⊆ { x : ℤ | Even x } :
 lemma inter_union' : (A ∩ B) ∪ A = A := by
   ext x
   constructor
-  
+
   intro h
   rw [Set.inter_def] at h
   rw [Set.union_def] at h
   rw [Set.mem_setOf] at h
-  
+
   rcases h with hp|hq
-  
+
   rw [Set.mem_setOf] at hp
   exact hp.left
 
   exact hq
 
   intro h
-  
+
   rw [Set.union_def]
   rw [Set.mem_setOf]
 
@@ -91,7 +91,7 @@ def less_than (n : ℕ) : Set ℕ := { x : ℕ | x < n }
 @[simp]
 def less_than_def (n : ℕ) : less_than n = { x : ℕ | x < n } := by rfl
 
-example : less_than 0 = ∅ := by 
+example : less_than 0 = ∅ := by
   unfold less_than
   simp
 

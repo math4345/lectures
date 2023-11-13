@@ -11,28 +11,48 @@ open Set
 --                                                   
 -- 
 
+-- Monday's lecture will be asynchronous
+
 -- Credit for today's lecture: Mathematics in Lean
 
-theorem Cantor (f : α → Set α) : ¬ Surjective f := by
+theorem Cantor (f : α → Set α) : ¬ Surjective f := by  
+  -- the proof is via "diagonalization"
+  let S : Set α := { i : α | i ∉ f i }
+ 
+  -- the idea is that if f were surjective...
   intro hs
-  let S := { i | i ∉ f i }
+  -- there would be an x so that f x = S
   rcases hs S with ⟨ x, hx ⟩
-  have h1 : x ∉ f x := by
-    intro h'
-    have : x ∉ f x := by rwa [hx] at h'
-    contradiction
+
+  -- either x ∈ S or x ∉ S
+  -- if x ∈ S, then x not in f x = S
+  -- if x ∉ S, then x ∈ f x = S
   have h2 : x ∉ S := by
-    rw [hx] at h1
-    assumption
+    have h1 : x ∉ f x := by
+      intro h'
+      have : x ∉ f x := by rwa [hx] at h'
+      contradiction
+    rwa [hx] at h1
+
   have h3 : x ∈ S := by
-    rw [mem_setOf] at h2
+    rw [mem_setOf, hx] at h2
     push_neg at h2
-    rw [hx] at h2
     assumption
+
   contradiction
 
-variable {α β : Type*} [Inhabited α]
+#check ({ 3 } : Set ℕ)
+#check (singleton 3 : Set ℕ)
 
+example : ∃ (f : α → Set α), Injective f := by
+  use (fun x => singleton x)
+  intro x₁ x₂ h
+  simp only [singleton_eq_singleton_iff] at h 
+  assumption
+
+--
+
+variable {α β : Type*} [Inhabited α]
 #check (default : α)
 
 variable (P : α → Prop) (h : ∃ x, P x)
@@ -46,27 +66,26 @@ noncomputable section
 open Classical
 
 def inverse (f : α → β) : β → α := fun (y : β) =>
-  if h : ∃ x, f x = y then Classical.choose h else default
+  if h : ∃ x, f x = y then choose h else default
 
 theorem inverse_spec {f : α → β} (y : β) (h : ∃ x, f x = y) :
   f (inverse f y) = y := by
   rw [inverse, dif_pos h]
-  exact Classical.choose_spec h
+  exact choose_spec h
 
-variable (f : α → β)
-
-open Function
-
-example : Injective f → LeftInverse (inverse f) f := by
-  intro h'
+example (f : α → β) (hi : Injective f) : LeftInverse (inverse f) f := by
   unfold LeftInverse
   intro x
-  unfold inverse
-  have hx : ∃ x_1, f x_1 = f x := by use x
-  rw [dif_pos hx]
-  have hf : f (choose hx) = f x := Classical.choose_spec hx
-  exact h' hf
+  have k : f (inverse f (f x)) = f x := by
+    apply inverse_spec
+    use x
+  unfold Injective at hi
+  exact hi k
+  
+example (f : α → β) (hs : Surjective f) : RightInverse (inverse f) f := by
+  intro x
+  exact inverse_spec _ (hs x)
 
-example : Surjective f → RightInverse (inverse f) f :=
-  sorry
+example (f : α → β) (hs : Surjective f) : RightInverse (inverse f) f := 
+  fun x => inverse_spec _ (hs x)
   
