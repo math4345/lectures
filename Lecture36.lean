@@ -19,44 +19,120 @@ import Mathlib.Tactic
 
 -- To focus our discussion today, we'll work with monoids.
 
-section
+-- "recall" the definition of monoid:
+-- A monoid is a semigroup with an identity element.
 
+-- a magma is a set with a binary operation
+-- a semigroup is a magma with an _associative_ operation
+-- a monoid is a semigroup with an identity element
+
+-- ℤ/2ℤ := { 0, 1 }
+
+-- any group is a monoid
+
+-- "symm" will take an equality and "reverse" it
+section
+variable {α : Type*}
+variable (x y : α)
+variable (h : x = y)
+#check (h.symm : y = x)
+end section
+
+-- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- --
+
+section
 variable {M : Type*} [Monoid M]
 
 #check Monoid ℕ
 
-example (a b c : M) : (a*b)*c = a*(b*c) := by exact?
-example (a b c : M) : a*(b*c) = (a*b)*c := by exact?
+example (a b c : M) : (a*b)*c = a*(b*c) := mul_assoc a b c
+example (a b c : M) : a*(b*c) = (a*b)*c := (mul_assoc a b c).symm
 
-example (m : M) : 1*m = m := by exact?
-example (m : M) : m*1 = m := by exact?
-example (m : M) : m ^ 3 = m * m * m := by exact?
+example (m : M) : 1*m = m := one_mul m
+example (m : M) : m*1 = m := mul_one m
+example (m : M) : m ^ 3 = m * (m * m) := pow_three m
+example (m : M) : m ^ 3 = (m * m) * m := pow_three' m
+example (m : M) : m ^ 2 = m * m := pow_two m
 
-example (a b c d : M) : (a*b)*(c*d) = a*(b*c)*d := by sorry
+example (a b c d : M) : (a*b)*(c*d) = a*(b*c)*d := by
+  rw [mul_assoc, mul_assoc, mul_assoc]
 
-example (e : M) : (∀ (m : M), e * m = m) → e = 1 := by
-  intro h
+-- If an element acts like the identity,
+-- it is equal to the identity.
+example (e : M) (h : ∀ (m : M), e * m = m) : e = 1 := by
   specialize h 1
   rwa [mul_one] at h
 
 end section
+
+-- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- --
 
 section
 
 variable {M : Type*} [Monoid M]
 variable {N : Type*} [Monoid N]
 variable (f : M →* N)
+variable (g : N →* M)
 
 #check f
+#check f.toFun
 
-example  (x y : M) (f : M →* N) : f (x * y) = (f x) * (f y) := by exact?
+example (x y : M) : f (x * y) = (f x) * (f y) := f.map_mul x y
+
+example (x y : M) : g (f (x * y)) = (g (f x)) * (g (f y)) := by
+  rw [← g.map_mul]
+  rw [← f.map_mul]
+
+example (x y : M) : g (f $ x * y) = (g $ f x) * (g $ f y) := by
+  rw [← g.map_mul]
+  rw [← f.map_mul]
+
+variable (hfg : f ∘ g = id)
+variable (hgf : g ∘ f = id)
+
+example : M ≃ N := by exact {
+    toFun := f,
+    invFun := g,
+    left_inv := congrFun hgf,
+    right_inv := congrFun hfg,
+  }
+
+example : M ≃* N := by exact {
+    toFun := f,
+    invFun := g,
+    left_inv := congrFun hgf,
+    right_inv := congrFun hfg,
+    map_mul' := by apply f.map_mul
+  }
 
 end section
+
+-- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- --
 
 section
--- M is a monoid; if an element m ∈ M is left invertible and right inverible,
+-- M is a monoid
+variable {M : Type*} [Monoid M]
+
+def left_inverses  (m : M) := { x : M | x * m = 1 }
+def right_inverses (m : M) := { x : M | m * x = 1 }
+
+-- if an element m ∈ M is left invertible and right inverible,
 -- then these inverses are the same.
+example (m : M) (xl : M) (xr : M)
+ (hl : xl ∈ left_inverses m)
+ (hr : xr ∈ right_inverses m) : xl = xr := by
+   unfold left_inverses at hl
+   unfold right_inverses at hr
+   simp at *
+   have : (xl * m) * xr = 1 * xr := by congr
+   simp at this
+   rw [mul_assoc, hr] at this
+   simp at this
+   assumption
+
 end section
+
+-- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- ---- --
 
 section
 -- M is a monoid; is it possible for an element to have distinct inverses?
